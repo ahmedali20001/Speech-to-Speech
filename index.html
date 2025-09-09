@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time STT-NLP-TTS</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        button { padding: 10px 20px; margin: 10px; }
+        #status { margin: 20px; }
+        #note { margin: 15px; font-style: italic; color: #333; }
+    </style>
+</head>
+<body>
+    <h1>Real-time Speech-to-Speech</h1>
+    <p id="note">This is currently built to recognize greetings, so say things like, e.g., "Hi! How are you?"</p>
+    <button id="startBtn">Start Recording</button>
+    <button id="stopBtn" disabled>Stop Recording</button>
+    <p id="status">Click "Start Recording" to begin</p>
+    <audio id="playback" controls></audio>
+    <script>
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const status = document.getElementById('status');
+        const playback = document.getElementById('playback');
+        let audioContext, stream, processor, ws;
+        async function startRecording() {
+            try {
+                // Initialize WebSocket
+                ws = new WebSocket('ws://localhost:8765');
+                ws.onopen = () => console.log('WebSocket connected');
+                ws.onmessage = handleMessage;
+                ws.onerror = (e) => status.textContent = `WebSocket error: ${e}`;
+                ws.onclose = () => status.textContent = 'WebSocket closed';
+                // Get audio stream
+                stream = await navigator.mediaDevices.getUserMedia({ audio: {
+                    sampleRate: 8000,
+                    channelCount: 1,
+                    echoCancellation: true,
+                    noiseSuppression: true
+                }});
+                audioContext = new AudioContext({ sampleRate: 8000 });
+                const source = audioContext.createMediaStreamSource(stream);
+                processor = audioContext.createScriptProcessor(4096, 1, 1);
+                processor.onaudioprocess = (e) => {
+                    const inputData = e.inputBuffer.getChannelData(0);
+                    // Convert float32 to int16
+                    const int16Data = new Int16Array(inputData.length);
+                    for (let i = 0; i < inputData.length; i++) {
+                        int16Data[i] = Math.max(-32768, Math.min(32767, inputData[i] * 32767));
+                    }
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send(int16Data.buffer);
+                    }
+                };
+                source.connect(processor);
+                processor.connect(audioContext.destination);
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                status.textContent = 'Recording... Speak now!';
+            } catch (err) {
+                status.textContent = `Error: ${err.message}`;
+            }
+        }
+        function stopRecording() {
+            if (processor) processor.disconnect();
+            if (stream) stream.getTracks().forEach(track => track.stop());
+            if (audioContext) audioContext.close();
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send('END');
+            }
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            status.textContent = 'Processing...';
+        }
+        function handleMessage(event) {
+            if (typeof event.data === 'string') {
+                status.textContent = event.data;
+                return;
+            }
+            // Convert received audio (int16) to AudioBuffer
+            const arrayBuffer = event.data;
+            const int16Data = new Int16Array(arrayBuffer);
+            const floatData = new Float32Array(int16Data.length);
+            for (let i = 0; i < int16Data.length; i++) {
+                floatData[i] = int16Data[i] / 32768;
+            }
+            const audioBuffer = audioContext.createBuffer(1, floatData.length, 8000);
+            audioBuffer.copyToChannel(floatData, 0);
+            // Play audio
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(audioContext.destination);
+            source.start();
+            playback.src = URL.createObjectURL(new Blob([arrayBuffer], { type: 'audio/wav' }));
+            status.textContent = 'Response received and playing!';
+        }
+        startBtn.addEventListener('click', startRecording);
+        stopBtn.addEventListener('click', stopRecording);
+    </script>
+</body>
+</html>
