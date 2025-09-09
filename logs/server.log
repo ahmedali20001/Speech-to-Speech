@@ -1,0 +1,11 @@
+{"timestamp": "2025-09-09 20:32:27", "level": "INFO", "request_id": "startup", "message": "Initializing pipelines"}
+{"timestamp": "2025-09-09 20:32:34", "level": "INFO", "request_id": "startup", "message": "Pipelines initialized"}
+{"timestamp": "2025-09-09 20:32:34", "level": "INFO", "request_id": "startup", "message": "WebSocket server started on ws://0.0.0.0:8765"}
+{"timestamp": "2025-09-09 20:32:34", "level": "INFO", "request_id": "startup", "message": "HTTP server started on http://0.0.0.0:8080"}
+{"timestamp": "2025-09-09 20:33:12", "level": "INFO", "request_id": "f863022b-ba6f-4df7-9bfc-1f0b36d6e9ad", "message": "Client connected"}
+{"timestamp": "2025-09-09 20:33:20", "level": "INFO", "request_id": "f863022b-ba6f-4df7-9bfc-1f0b36d6e9ad", "message": "Input audio saved to audio/record_chunk.wav"}
+{"timestamp": "2025-09-09 20:33:22", "level": "INFO", "request_id": "f863022b-ba6f-4df7-9bfc-1f0b36d6e9ad", "message": "Speech-to-text: Hi. How are you?"}
+{"timestamp": "2025-09-09 20:33:22", "level": "INFO", "request_id": "f863022b-ba6f-4df7-9bfc-1f0b36d6e9ad", "message": "Intent detection: is_greeting=True, sentiment={'label': 'POSITIVE', 'score': 0.9965341091156006}", "text": "hi. how are you?"}
+{"timestamp": "2025-09-09 20:33:22", "level": "INFO", "request_id": "f863022b-ba6f-4df7-9bfc-1f0b36d6e9ad", "message": "Entity extraction: []"}
+{"timestamp": "2025-09-09 20:33:22", "level": "INFO", "request_id": "f863022b-ba6f-4df7-9bfc-1f0b36d6e9ad", "message": "Response generated: I'm fine, thank you!"}
+{"timestamp": "2025-09-09 20:33:24", "level": "INFO", "request_id": "f863022b-ba6f-4df7-9bfc-1f0b36d6e9ad", "message": "TTS output saved to audio/tts_output_gtts.wav"}
